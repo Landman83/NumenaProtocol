@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import "./LibRichErrorsV08.sol";
-import "./LibAuthorizableRichErrorsV08.sol";
+import "../errors/LibRichErrorsV08.sol";
+import "../errors/LibAuthorizableRichErrorsV08.sol";
 import "./OwnableV08.sol";
-
-contract Authorizable is OwnableV08 {
+import "../interfaces/IAuthorizableV08.sol";
+contract Authorizable is OwnableV08, IAuthorizableV08 {
+    modifier onlyAuthorized() {
+        _assertSenderIsAuthorized();
+        _;
+    }
     mapping(address => bool) public override authorized;
     address[] public override authorities;
 
@@ -72,9 +75,6 @@ contract Authorizable is OwnableV08 {
         authorities.pop();
         emit AuthorizedAddressRemoved(target, msg.sender);
     }
-
-    event AuthorizedAddressAdded(address indexed target, address indexed caller);
-    event AuthorizedAddressRemoved(address indexed target, address indexed caller);
 }
 
 

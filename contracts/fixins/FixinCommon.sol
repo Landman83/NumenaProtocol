@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-import "../errors/LibRichErrorsV06.sol";
+import "../errors/LibRichErrorsV08.sol";
 import "../errors/LibCommonRichErrors.sol";
 import "../errors/LibOwnableRichErrors.sol";
 import "../interfaces/IOwnableFeature.sol";
@@ -10,7 +10,7 @@ import "../interfaces/ISimpleFunctionRegistryFeature.sol";
 
 /// @dev Common feature utilities for matched orders.
 abstract contract FixinCommonMatchedOrders {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrorsV08 for bytes;
 
     /// @dev The implementation address of this feature.
     address internal immutable _implementation;

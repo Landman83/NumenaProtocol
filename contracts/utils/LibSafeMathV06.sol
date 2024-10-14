@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.26;
 
-import "../errors/LibRichErrorsV06.sol";
-import "../errors/LibSafeMathRichErrorsV06.sol";
+import "../errors/LibRichErrorsV08.sol";
+import "../errors/LibSafeMathRichErrorsV08.sol";
 
 library LibSafeMathV06 {
     function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -12,9 +12,9 @@ library LibSafeMathV06 {
         }
         uint256 c = a * b;
         if (c / a != b) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.MULTIPLICATION_OVERFLOW,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.MULTIPLICATION_OVERFLOW,
                     a,
                     b
                 )
@@ -25,9 +25,9 @@ library LibSafeMathV06 {
 
     function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
         if (b == 0) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.DIVISION_BY_ZERO,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.DIVISION_BY_ZERO,
                     a,
                     b
                 )
@@ -39,9 +39,9 @@ library LibSafeMathV06 {
 
     function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
         if (b > a) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.SUBTRACTION_UNDERFLOW,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.SUBTRACTION_UNDERFLOW,
                     a,
                     b
                 )
@@ -53,9 +53,9 @@ library LibSafeMathV06 {
     function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         if (c < a) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.ADDITION_OVERFLOW,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.ADDITION_OVERFLOW,
                     a,
                     b
                 )
@@ -78,9 +78,9 @@ library LibSafeMathV06 {
         }
         uint128 c = a * b;
         if (c / a != b) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.MULTIPLICATION_OVERFLOW,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.MULTIPLICATION_OVERFLOW,
                     a,
                     b
                 )
@@ -91,9 +91,9 @@ library LibSafeMathV06 {
 
     function safeDiv128(uint128 a, uint128 b) internal pure returns (uint128) {
         if (b == 0) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.DIVISION_BY_ZERO,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.DIVISION_BY_ZERO,
                     a,
                     b
                 )
@@ -105,9 +105,9 @@ library LibSafeMathV06 {
 
     function safeSub128(uint128 a, uint128 b) internal pure returns (uint128) {
         if (b > a) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.SUBTRACTION_UNDERFLOW,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.SUBTRACTION_UNDERFLOW,
                     a,
                     b
                 )
@@ -119,9 +119,9 @@ library LibSafeMathV06 {
     function safeAdd128(uint128 a, uint128 b) internal pure returns (uint128) {
         uint128 c = a + b;
         if (c < a) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256BinOpError(
-                    LibSafeMathRichErrorsV06.BinOpErrorCodes.ADDITION_OVERFLOW,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256BinOpError(
+                    LibSafeMathRichErrorsV08.BinOpErrorCodes.ADDITION_OVERFLOW,
                     a,
                     b
                 )
@@ -140,9 +140,9 @@ library LibSafeMathV06 {
 
     function safeDowncastToUint128(uint256 a) internal pure returns (uint128) {
         if (a > type(uint128).max) {
-            LibRichErrorsV06.rrevert(
-                LibSafeMathRichErrorsV06.Uint256DowncastError(
-                    LibSafeMathRichErrorsV06.DowncastErrorCodes.VALUE_TOO_LARGE_TO_DOWNCAST_TO_UINT128,
+            LibRichErrorsV08.rrevert(
+                LibSafeMathRichErrorsV08.Uint256DowncastError(
+                    LibSafeMathRichErrorsV08.DowncastErrorCodes.VALUE_TOO_LARGE_TO_DOWNCAST_TO_UINT128,
                     a
                 )
             );

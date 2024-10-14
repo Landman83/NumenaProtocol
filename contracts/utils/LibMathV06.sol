@@ -3,8 +3,8 @@
 pragma solidity ^0.8.26;
 
 import "./LibSafeMathV06.sol";
-import "../errors/LibRichErrorsV06.sol";
-import "../errors/LibMathRichErrorsV06.sol";
+import "../errors/LibRichErrorsV08.sol";
+import "../errors/LibMathRichErrorsV08.sol";
 
 library LibMathV06 {
     using LibSafeMathV06 for uint256;
@@ -15,7 +15,7 @@ library LibMathV06 {
         uint256 target
     ) internal pure returns (uint256 partialAmount) {
         if (isRoundingErrorFloor(numerator, denominator, target)) {
-            LibRichErrorsV06.rrevert(LibMathRichErrorsV06.RoundingError(numerator, denominator, target));
+            LibRichErrorsV08.rrevert(LibMathRichErrorsV08.RoundingError(numerator, denominator, target));
         }
 
         partialAmount = numerator.safeMul(target).safeDiv(denominator);
@@ -28,7 +28,7 @@ library LibMathV06 {
         uint256 target
     ) internal pure returns (uint256 partialAmount) {
         if (isRoundingErrorCeil(numerator, denominator, target)) {
-            LibRichErrorsV06.rrevert(LibMathRichErrorsV06.RoundingError(numerator, denominator, target));
+            LibRichErrorsV08.rrevert(LibMathRichErrorsV08.RoundingError(numerator, denominator, target));
         }
 
         partialAmount = numerator.safeMul(target).safeAdd(denominator.safeSub(1)).safeDiv(denominator);
@@ -61,7 +61,7 @@ library LibMathV06 {
         uint256 target
     ) internal pure returns (bool isError) {
         if (denominator == 0) {
-            LibRichErrorsV06.rrevert(LibMathRichErrorsV06.DivisionByZeroError());
+            LibRichErrorsV08.rrevert(LibMathRichErrorsV08.DivisionByZeroError());
         }
 
         if (target == 0 || numerator == 0) {
@@ -79,7 +79,7 @@ library LibMathV06 {
         uint256 target
     ) internal pure returns (bool isError) {
         if (denominator == 0) {
-            LibRichErrorsV06.rrevert(LibMathRichErrorsV06.DivisionByZeroError());
+            LibRichErrorsV08.rrevert(LibMathRichErrorsV08.DivisionByZeroError());
         }
 
         if (target == 0 || numerator == 0) {
