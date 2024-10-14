@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "../../tokens/IERC20Token.sol";
+import "../../errors/LibRichErrorsV06.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../libs/LibNativeOrdersStorage.sol";
 import "../../interfaces/INativeOrderEvents.sol";

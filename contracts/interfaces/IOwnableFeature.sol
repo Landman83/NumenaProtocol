@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-utils/contracts/src/v06/interfaces/IOwnableV06.sol";
+import "./IOwnableV06.sol";
 
 interface IOwnableFeatureMatchedOrders is IOwnableV06 {
     event Migrated(address caller, address migrator, address newOwner);

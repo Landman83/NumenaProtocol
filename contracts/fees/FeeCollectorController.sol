@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "../tokens/IEtherToken.sol";
 import "../interfaces/IStaking.sol";
 import "./FeeCollector.sol";
 import "./LibFeeCollector.sol";

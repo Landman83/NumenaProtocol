@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "../tokens/IERC20Token.sol";
+import "../utils/LibSafeMathV06.sol";
 
 abstract contract FixinTokenSpender {
     uint256 private constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;

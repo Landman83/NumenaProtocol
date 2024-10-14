@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/AuthorizableV06.sol";
+import "../tokens/IEtherToken.sol";
+import "../utils/AuthorizableV06.sol";
 import "../interfaces/IStaking.sol";
 
 contract FeeCollector is AuthorizableV06 {

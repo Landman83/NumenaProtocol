@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "../../tokens/IEtherToken.sol";
+import "../../errors/LibRichErrorsV06.sol";
+import "../../utils/LibSafeMathV06.sol";
 import "../../fixins/FixinProtocolFees.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../interfaces/IStaking.sol";

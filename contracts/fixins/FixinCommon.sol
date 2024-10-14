@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "../errors/LibRichErrorsV06.sol";
 import "../errors/LibCommonRichErrors.sol";
 import "../errors/LibOwnableRichErrors.sol";
 import "../interfaces/IOwnableFeature.sol";

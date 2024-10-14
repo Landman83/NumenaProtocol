@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "../tokens/IERC20Token.sol";
 import "../libs/LibSignature.sol";
 import "../libs/LibNativeOrder.sol";
 import "./INativeOrderEvents.sol";
