@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-interface ISimpleFunctionRegistryFeatureMatchedOrders {
+interface ISimpleFunctionRegistryFeature {
     event ProxyFunctionUpdated(bytes4 indexed selector, address oldImpl, address newImpl);
 
     function rollback(bytes4 selector, address targetImpl) external;

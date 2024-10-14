@@ -7,7 +7,7 @@ import "../errors/LibCommonRichErrors.sol";
 import "../errors/LibOwnableRichErrors.sol";
 
 /// @dev EIP712 helpers for matched orders features.
-abstract contract FixinEIP712MatchedOrders {
+abstract contract FixinEIP712 {
     /// @dev The domain hash separator for the entire exchange proxy.
     bytes32 public immutable EIP712_DOMAIN_SEPARATOR;
 

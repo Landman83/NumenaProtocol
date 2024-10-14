@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import "../../tokens/IERC20Token.sol";
-import "../../errors/LibRichErrorsV06.sol";
+import "../../errors/LibRichErrorsV08.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../libs/LibNativeOrdersStorage.sol";
 import "../../interfaces/INativeOrderEvents.sol";
@@ -12,7 +12,7 @@ import "../../libs/LibNativeOrder.sol";
 import "./NativeOrdersInfo.sol";
 
 abstract contract NativeOrdersCancellation is INativeOrdersEvents, NativeOrdersInfo {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrorsV08 for bytes;
 
     uint256 private constant HIGH_BIT = 1 << 255;
 

@@ -13,7 +13,7 @@ import "../../libs/LibNativeOrder.sol";
 
 abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
     using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrorsV08 for bytes;
 
     struct GetActualFillableTakerTokenAmountParams {
         address maker;

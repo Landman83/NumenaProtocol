@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.26;
 
-import "../errors/LibRichErrorsV06.sol";
+import "../errors/LibRichErrorsV08.sol";
 import "../errors/LibSignatureRichErrors.sol";
 
-library LibSignatureMatchedOrders {
-    using LibRichErrorsV06 for bytes;
+library LibSignature {
+    using LibRichErrorsV08 for bytes;
 
     uint256 private constant ETH_SIGN_HASH_PREFIX = 0x19457468657265756d205369676e6564204d6573736167653a0a333200000000;
     uint256 private constant ECDSA_SIGNATURE_R_LIMIT =

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import "../../tokens/IEtherToken.sol";
-import "../../errors/LibRichErrorsV06.sol";
+import "../../errors/LibRichErrorsV08.sol";
 import "../../utils/LibSafeMathV06.sol";
 import "../../fixins/FixinProtocolFees.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
@@ -11,7 +11,7 @@ import "../../interfaces/IStaking.sol";
 
 abstract contract NativeOrdersProtocolFees is FixinProtocolFees {
     using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrorsV08 for bytes;
 
     constructor(
         IEtherToken weth,

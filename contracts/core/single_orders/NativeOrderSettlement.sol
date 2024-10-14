@@ -22,7 +22,7 @@ abstract contract NativeOrdersSettlement is
     NativeOrdersProtocolFees,
     FixinCommon
 {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrorsV08 for bytes;
 
     struct SettleOrderInfo {
         bytes32 orderHash;

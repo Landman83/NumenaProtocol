@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-library LibCommonRichErrorsMatchedOrders {
+library LibCommonRichErrors {
     function OnlyCallableBySelfError(address sender) internal pure returns (bytes memory) {
         return abi.encodeWithSelector(
             bytes4(keccak256("OnlyCallableBySelfError(address)")),

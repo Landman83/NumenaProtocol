@@ -3,13 +3,13 @@
 pragma solidity ^0.8.26;
 
 import "../tokens/IERC20Token.sol";
-import "../errors/LibRichErrorsV06.sol";
+import "../errors/LibRichErrorsV08.sol";
 import "../utils/LibSafeMathV06.sol";
 import "../errors/LibNativeOrdersRichErrors.sol";
 
 library LibNativeOrder {
     using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrorsV08 for bytes;
 
     enum OrderStatus {
         INVALID,

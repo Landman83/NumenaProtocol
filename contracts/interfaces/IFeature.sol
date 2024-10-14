@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 /// @dev Basic interface for a matched orders feature contract.
-interface IFeatureMatchedOrders {
+interface IFeature {
     /// @dev The name of this feature set.
     function FEATURE_NAME() external view returns (string memory name);
 

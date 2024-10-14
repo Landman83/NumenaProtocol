@@ -6,7 +6,7 @@ import "../errors/LibRichErrorsV08.sol";
 import "../errors/LibAuthorizableRichErrorsV08.sol";
 import "./OwnableV08.sol";
 import "../interfaces/IAuthorizableV08.sol";
-contract Authorizable is OwnableV08, IAuthorizableV08 {
+contract AuthorizableV08 is OwnableV08, IAuthorizableV08 {
     modifier onlyAuthorized() {
         _assertSenderIsAuthorized();
         _;

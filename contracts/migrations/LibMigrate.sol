@@ -5,7 +5,7 @@ pragma solidity ^0.8.26;
 import "../errors/LibRichErrorsV08.sol";
 import "../errors/LibOwnableRichErrors.sol";
 
-library LibMatchedOrdersMigrate {
+library LibMigrate {
     bytes4 internal constant MIGRATE_SUCCESS = 0x2c64c5ef;
 
     using LibRichErrorsV08 for bytes;

@@ -4,12 +4,12 @@ pragma solidity ^0.8.26;
 
 pragma solidity 0.8.26;
 
-import "../interfaces/IAuthorizableV06.sol";
-import "../errors/LibRichErrorsV06.sol";
-import "../errors/LibAuthorizableRichErrorsV06.sol";
-import "./OwnableV06.sol";
+import "../interfaces/IAuthorizableV08.sol";
+import "../errors/LibRichErrorsV08.sol";
+import "../errors/LibAuthorizableRichErrorsV08.sol";
+import "./OwnableV08.sol";
 
-contract AuthorizableV06 is OwnableV06, IAuthorizableV06 {
+contract AuthorizableV06 is OwnableV08, IAuthorizableV08 {
     modifier onlyAuthorized() {
         _assertSenderIsAuthorized();
         _;
@@ -18,7 +18,7 @@ contract AuthorizableV06 is OwnableV06, IAuthorizableV06 {
     mapping(address => bool) public override authorized;
     address[] public override authorities;
 
-    constructor() OwnableV06() {}
+    constructor() OwnableV08() {}
 
     function addAuthorizedAddress(address target) external override onlyOwner {
         _addAuthorizedAddress(target);
@@ -26,7 +26,7 @@ contract AuthorizableV06 is OwnableV06, IAuthorizableV06 {
 
     function removeAuthorizedAddress(address target) external override onlyOwner {
         if (!authorized[target]) {
-            LibRichErrorsV06.rrevert(LibAuthorizableRichErrorsV06.TargetNotAuthorizedError(target));
+            LibRichErrorsV08.rrevert(LibAuthorizableRichErrorsV08.TargetNotAuthorizedError(target));
         }
         for (uint256 i = 0; i < authorities.length; i++) {
             if (authorities[i] == target) {
@@ -46,17 +46,17 @@ contract AuthorizableV06 is OwnableV06, IAuthorizableV06 {
 
     function _assertSenderIsAuthorized() internal view {
         if (!authorized[msg.sender]) {
-            LibRichErrorsV06.rrevert(LibAuthorizableRichErrorsV06.SenderNotAuthorizedError(msg.sender));
+            LibRichErrorsV08.rrevert(LibAuthorizableRichErrorsV08.SenderNotAuthorizedError(msg.sender));
         }
     }
 
     function _addAuthorizedAddress(address target) internal {
         if (target == address(0)) {
-            LibRichErrorsV06.rrevert(LibAuthorizableRichErrorsV06.ZeroCantBeAuthorizedError());
+            LibRichErrorsV08.rrevert(LibAuthorizableRichErrorsV08.ZeroCantBeAuthorizedError());
         }
 
         if (authorized[target]) {
-            LibRichErrorsV06.rrevert(LibAuthorizableRichErrorsV06.TargetAlreadyAuthorizedError(target));
+            LibRichErrorsV08.rrevert(LibAuthorizableRichErrorsV08.TargetAlreadyAuthorizedError(target));
         }
 
         authorized[target] = true;
@@ -66,14 +66,14 @@ contract AuthorizableV06 is OwnableV06, IAuthorizableV06 {
 
     function _removeAuthorizedAddressAtIndex(address target, uint256 index) internal {
         if (!authorized[target]) {
-            LibRichErrorsV06.rrevert(LibAuthorizableRichErrorsV06.TargetNotAuthorizedError(target));
+            LibRichErrorsV08.rrevert(LibAuthorizableRichErrorsV08.TargetNotAuthorizedError(target));
         }
         if (index >= authorities.length) {
-            LibRichErrorsV06.rrevert(LibAuthorizableRichErrorsV06.IndexOutOfBoundsError(index, authorities.length));
+            LibRichErrorsV08.rrevert(LibAuthorizableRichErrorsV08.IndexOutOfBoundsError(index, authorities.length));
         }
         if (authorities[index] != target) {
-            LibRichErrorsV06.rrevert(
-                LibAuthorizableRichErrorsV06.AuthorizedAddressMismatchError(authorities[index], target)
+            LibRichErrorsV08.rrevert(
+                LibAuthorizableRichErrorsV08.AuthorizedAddressMismatchError(authorities[index], target)
             );
         }
 

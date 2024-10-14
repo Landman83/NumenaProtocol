@@ -9,7 +9,7 @@ import "../interfaces/IOwnableFeature.sol";
 import "../interfaces/ISimpleFunctionRegistryFeature.sol";
 
 /// @dev Common feature utilities for matched orders.
-abstract contract FixinCommonMatchedOrders {
+abstract contract FixinCommon {
     using LibRichErrorsV08 for bytes;
 
     /// @dev The implementation address of this feature.

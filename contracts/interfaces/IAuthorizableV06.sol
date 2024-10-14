@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.26;
 
-import "./IOwnableV06.sol";
+import "./IOwnableV08.sol";
 
-interface IAuthorizableV06 is IOwnableV06 {
+interface IAuthorizableV06 is IOwnableV08 {
     event AuthorizedAddressAdded(address indexed target, address indexed caller);
     event AuthorizedAddressRemoved(address indexed target, address indexed caller);
 

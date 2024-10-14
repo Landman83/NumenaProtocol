@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.26;
 
-library LibOwnableRichErrorsMatchedOrders {
+library LibOwnableRichErrors {
     function OnlyOwnerError(address sender, address owner) internal pure returns (bytes memory) {
         return abi.encodeWithSelector(
             bytes4(keccak256("OnlyOwnerError(address,address)")),

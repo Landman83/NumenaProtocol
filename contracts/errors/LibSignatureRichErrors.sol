@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 
-library LibMatchedOrdersSignatureRichErrors {
+library LibSignatureRichErrors {
     enum SignatureValidationErrorCodes {
         ALWAYS_INVALID,
         INVALID_LENGTH,
