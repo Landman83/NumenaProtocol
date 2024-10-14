@@ -3,10 +3,10 @@
 pragma solidity ^0.8.26;
 
 import "../tokens/IEtherToken.sol";
-import "../utils/AuthorizableV06.sol";
+import "../utils/AuthorizableV08.sol";
 import "../interfaces/IStaking.sol";
 
-contract FeeCollector is AuthorizableV06 {
+contract FeeCollector is AuthorizableV08 {
     receive() external payable {}
 
     constructor() {

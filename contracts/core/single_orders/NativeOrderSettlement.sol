@@ -106,27 +106,24 @@ abstract contract NativeOrdersSettlement is
         LibNativeOrder.OrderInfo memory orderInfo = getLimitOrderInfo(params.order);
 
         if (orderInfo.status != LibNativeOrder.OrderStatus.FILLABLE) {
-            LibNativeOrdersRichErrors.OrderNotFillableError(orderInfo.orderHash, uint8(orderInfo.status)).rrevert();
+            revert LibNativeOrdersRichErrors.OrderNotFillableError(orderInfo.orderHash, uint8(orderInfo.status));
         }
 
         if (params.order.taker != address(0) && params.order.taker != params.taker) {
-            LibNativeOrdersRichErrors
-                .OrderNotFillableByTakerError(orderInfo.orderHash, params.taker, params.order.taker)
-                .rrevert();
+            revert LibNativeOrdersRichErrors
+                .OrderNotFillableByTakerError(orderInfo.orderHash, params.taker, params.order.taker);
         }
 
         if (params.order.sender != address(0) && params.order.sender != params.sender) {
-            LibNativeOrdersRichErrors
-                .OrderNotFillableBySenderError(orderInfo.orderHash, params.sender, params.order.sender)
-                .rrevert();
+            revert LibNativeOrdersRichErrors
+                .OrderNotFillableBySenderError(orderInfo.orderHash, params.sender, params.order.sender);
         }
 
         {
             address signer = LibSignature.getSignerOfHash(orderInfo.orderHash, params.signature);
             if (signer != params.order.maker && !isValidOrderSigner(params.order.maker, signer)) {
-                LibNativeOrdersRichErrors
-                    .OrderNotSignedByMakerError(orderInfo.orderHash, signer, params.order.maker)
-                    .rrevert();
+                revert LibNativeOrdersRichErrors
+                    .OrderNotSignedByMakerError(orderInfo.orderHash, signer, params.order.maker);
             }
         }
 

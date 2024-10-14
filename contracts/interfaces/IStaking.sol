@@ -42,4 +42,12 @@ interface IStaking {
         address staker,
         bytes32 poolId
     ) external view returns (StoredBalance memory balance);
+
+    function joinStakingPoolAsMaker(bytes32 poolId) external;
+
+    function payProtocolFee(
+        address payerAddress,
+        address poolOperatorAddress,
+        uint256 amount
+    ) external;
 }
