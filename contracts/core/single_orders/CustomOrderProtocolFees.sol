@@ -10,14 +10,14 @@ import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../interfaces/IStaking.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-abstract contract NativeOrdersProtocolFees is CustomProtocolFees {
+abstract contract CustomOrderProtocolFees is CustomProtocolFees {
     using LibSafeMathV06 for uint256;
     using LibRichErrorsV08 for bytes;
 
     constructor(
         IERC20 feeToken,
         IStaking staking,
-        FeeCollectorController feeCollectorController,
+        CustomFeeCollectorController feeCollectorController,
         uint256 _makerFeePercentage,
         uint256 _takerFeePercentage
     ) CustomProtocolFees(feeToken, staking, feeCollectorController, _makerFeePercentage, _takerFeePercentage) {}
@@ -28,10 +28,8 @@ abstract contract NativeOrdersProtocolFees is CustomProtocolFees {
         }
     }
 
-    function getProtocolFee(uint256 makerAmount, uint256 takerAmount) public view returns (uint256) {
+    function getProtocolFee(uint256 /*makerAmount*/, uint256 /*takerAmount*/) public view returns (uint256) {
         return calculateProtocolFee(
-            makerAmount,
-            takerAmount,
             makerFeePercentage,
             takerFeePercentage
         );

@@ -26,6 +26,7 @@ abstract contract NativeOrdersCancellation is INativeOrdersEvents, NativeOrdersI
         _cancelOrderHash(orderHash, order.maker);
     }
 
+/*
     function cancelRfqOrder(LibNativeOrder.RfqOrder memory order) public {
         bytes32 orderHash = getRfqOrderHash(order);
         if (msg.sender != order.maker && !isValidOrderSigner(order.maker, msg.sender)) {
@@ -33,19 +34,19 @@ abstract contract NativeOrdersCancellation is INativeOrdersEvents, NativeOrdersI
         }
         _cancelOrderHash(orderHash, order.maker);
     }
-
+*/
     function batchCancelLimitOrders(LibNativeOrder.LimitOrder[] memory orders) public {
         for (uint256 i = 0; i < orders.length; ++i) {
             cancelLimitOrder(orders[i]);
         }
     }
-
+/*
     function batchCancelRfqOrders(LibNativeOrder.RfqOrder[] memory orders) public {
         for (uint256 i = 0; i < orders.length; ++i) {
             cancelRfqOrder(orders[i]);
         }
     }
-
+*/
     function cancelPairLimitOrders(IERC20Token makerToken, IERC20Token takerToken, uint256 minValidSalt) public {
         _cancelPairLimitOrders(msg.sender, makerToken, takerToken, minValidSalt);
     }
@@ -97,7 +98,7 @@ abstract contract NativeOrdersCancellation is INativeOrdersEvents, NativeOrdersI
             _cancelPairLimitOrders(maker, makerTokens[i], takerTokens[i], minValidSalts[i]);
         }
     }
-
+/*
     function cancelPairRfqOrders(IERC20Token makerToken, IERC20Token takerToken, uint256 minValidSalt) public {
         _cancelPairRfqOrders(msg.sender, makerToken, takerToken, minValidSalt);
     }
@@ -149,14 +150,14 @@ abstract contract NativeOrdersCancellation is INativeOrdersEvents, NativeOrdersI
             _cancelPairRfqOrders(maker, makerTokens[i], takerTokens[i], minValidSalts[i]);
         }
     }
-
+*/
     function _cancelOrderHash(bytes32 orderHash, address maker) private {
         LibNativeOrdersStorage.Storage storage stor = LibNativeOrdersStorage.getStorage();
         stor.orderHashToTakerTokenFilledAmount[orderHash] |= HIGH_BIT;
 
         emit OrderCancelled(orderHash, maker);
     }
-
+/*
     function _cancelPairRfqOrders(
         address maker,
         IERC20Token makerToken,
@@ -179,7 +180,7 @@ abstract contract NativeOrdersCancellation is INativeOrdersEvents, NativeOrdersI
 
         emit PairCancelledRfqOrders(maker, address(makerToken), address(takerToken), minValidSalt);
     }
-
+*/
     function _cancelPairLimitOrders(
         address maker,
         IERC20Token makerToken,

@@ -6,6 +6,7 @@ import "../tokens/IERC20Token.sol";
 import "../errors/LibRichErrorsV08.sol";
 import "../utils/LibSafeMathV06.sol";
 import "../errors/LibNativeOrdersRichErrors.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 library LibNativeOrder {
     using LibSafeMathV06 for uint256;
@@ -68,15 +69,17 @@ library LibNativeOrder {
         }
     }
 
-    function calculateProtocolFee(
-        uint256 makerAmount,
-        uint256 takerAmount,
-        uint256 makerFeePercentage,
-        uint256 takerFeePercentage
-    ) internal pure returns (uint256) {
-        uint256 totalFeePercentage = makerFeePercentage + takerFeePercentage;
-        uint256 makerFee = (makerAmount * totalFeePercentage) / 10000;
-        uint256 takerFee = (takerAmount * totalFeePercentage) / 10000;
-        return makerFee > takerFee ? makerFee : takerFee;
+    function refundExcessProtocolFeeToSender(
+        IERC20 feeToken,
+        address payer,
+        uint256 protocolFeePaid,
+        uint256 protocolFeeAmount
+    ) internal {
+        if (protocolFeePaid > protocolFeeAmount) {
+            uint256 refundAmount = protocolFeePaid - protocolFeeAmount;
+            require(feeToken.transfer(payer, refundAmount), "Fee refund failed");
+        }
     }
+
+    
 }

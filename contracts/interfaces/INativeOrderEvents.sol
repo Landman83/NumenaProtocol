@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import "../libs/LibSignature.sol";
-import "../libs/LibNativeOrder.sol";
+import "../libs/LibCustomOrder.sol";
 
 interface INativeOrdersEvents {
     event LimitOrderFilled(
@@ -15,7 +15,7 @@ interface INativeOrdersEvents {
         address takerToken,
         uint128 takerTokenFilledAmount,
         uint128 makerTokenFilledAmount,
-        uint128 takerTokenFeeFilledAmount,
+        // uint128 takerTokenFeeFilledAmount
         uint256 protocolFeePaid,
         bytes32 pool
     );

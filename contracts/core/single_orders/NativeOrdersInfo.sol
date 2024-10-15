@@ -9,7 +9,7 @@ import "../../fixins/FixinEIP712.sol";
 import "../../fixins/FixinTokenSpender.sol";
 import "../../libs/LibNativeOrdersStorage.sol";
 import "../../libs/LibSignature.sol";
-import "../../libs/LibNativeOrder.sol";
+import "../../libs/LibCustomOrder.sol"; // changed import from LibNativeOrder to LibCustomOrder to accomodate fee changes
 
 abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
     using LibSafeMathV06 for uint256;
@@ -25,7 +25,7 @@ abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
 
     uint256 private constant HIGH_BIT = 1 << 255;
 
-    constructor(address zeroExAddress) FixinEIP712(zeroExAddress) {}
+    constructor(address octagramAddress) FixinEIP712(octagramAddress) {}
 
     function getLimitOrderInfo(
         LibNativeOrder.LimitOrder memory order
@@ -39,6 +39,7 @@ abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
         _populateCommonOrderInfoFields(orderInfo, order.takerAmount, order.expiry, order.salt, minValidSalt);
     }
 
+/*
     function getRfqOrderInfo(
         LibNativeOrder.RfqOrder memory order
     ) public view returns (LibNativeOrder.OrderInfo memory orderInfo) {
@@ -54,15 +55,16 @@ abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
             orderInfo.status = LibNativeOrder.OrderStatus.INVALID;
         }
     }
+    */
 
     function getLimitOrderHash(LibNativeOrder.LimitOrder memory order) public view returns (bytes32 orderHash) {
         return _getEIP712Hash(LibNativeOrder.getLimitOrderStructHash(order));
     }
-
+/*
     function getRfqOrderHash(LibNativeOrder.RfqOrder memory order) public view returns (bytes32 orderHash) {
         return _getEIP712Hash(LibNativeOrder.getRfqOrderStructHash(order));
     }
-
+*/
     function getLimitOrderRelevantState(
         LibNativeOrder.LimitOrder memory order,
         LibSignature.Signature calldata signature
@@ -88,7 +90,7 @@ abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
         address signerOfHash = LibSignature.getSignerOfHash(orderInfo.orderHash, signature);
         isSignatureValid = (order.maker == signerOfHash) || isValidOrderSigner(order.maker, signerOfHash);
     }
-
+/*
     function getRfqOrderRelevantState(
         LibNativeOrder.RfqOrder memory order,
         LibSignature.Signature memory signature
@@ -172,6 +174,7 @@ abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
             } catch {}
         }
     }
+    */
 
     function _populateCommonOrderInfoFields(
         LibNativeOrder.OrderInfo memory orderInfo,

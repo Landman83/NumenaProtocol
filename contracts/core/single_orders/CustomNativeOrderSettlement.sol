@@ -7,19 +7,21 @@ import "../../errors/LibRichErrorsV06.sol";
 import "../../utils/LibMathV06.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../fixins/FixinCommon.sol";
-import "../../libs/LibNativeOrdersStorage.sol";
 import "../../interfaces/IStaking.sol";
+import "../../libs/LibNativeOrdersStorage.sol";
 import "../../interfaces/INativeOrderEvents.sol";
 import "../../libs/LibSignature.sol";
-import "../../libs/LibNativeOrder.sol";
+import "../../libs/LibCustomOrder.sol";
 import "./NativeOrdersCancellation.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../fees/CustomProtocolFees.sol";
+import "./CustomOrderProtocolFees.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 
 abstract contract NativeOrdersSettlement is
     INativeOrdersEvents,
     NativeOrdersCancellation,
-    FixinProtocolFees,
+    CustomOrderProtocolFees,
     FixinCommon
 {
     using LibRichErrorsV08 for bytes;
@@ -35,7 +37,8 @@ abstract contract NativeOrdersSettlement is
         uint128 takerAmount;
         uint128 takerTokenFillAmount;
         uint128 takerTokenFilledAmount;
-        uint256 protocolFeeAmount;  // Changed from makerFeePaid and takerFeePaid
+        uint256 protocolFeeAmount;
+        bool makerIsBuyer;  // Make sure this field is present
     }
 
     struct FillLimitOrderPrivateParams {
@@ -58,12 +61,12 @@ abstract contract NativeOrdersSettlement is
         address octagramAddress,
         IERC20 _feeToken,
         IStaking staking,
-        FeeCollectorController feeCollectorController,
+        CustomFeeCollectorController feeCollectorController,
         uint256 makerFeePercentage,
         uint256 takerFeePercentage
     )
-        NativeOrdersCancellation(octagramExAddress)
-        FixinProtocolFees(_feeToken, staking, feeCollectorController, makerFeePercentage, takerFeePercentage)
+        NativeOrdersCancellation(octagramAddress)
+        CustomOrderProtocolFees(_feeToken, staking, feeCollectorController, makerFeePercentage, takerFeePercentage)
     {
         feeToken = _feeToken;
     }
@@ -82,11 +85,19 @@ abstract contract NativeOrdersSettlement is
                 sender: msg.sender
             })
         );
-        LibNativeOrder.refundExcessProtocolFeeToSender(results.protocolFeePaid);
-        (takerTokenFilledAmount, makerTokenFilledAmount) = (
-            results.takerTokenFilledAmount,
-            results.makerTokenFilledAmount
+        
+        // Determine the fee payer based on the order type or other logic
+        address feePayer = _determineFeePayer(order, msg.sender);
+        
+        LibNativeOrder.refundExcessProtocolFeeToSender(
+            FEE_TOKEN,
+            feePayer,
+            results.protocolFeePaid,
+            results.protocolFeePaid
         );
+        
+        takerTokenFilledAmount = uint128(results.takerTokenFilledAmount);
+        makerTokenFilledAmount = uint128(results.makerTokenFilledAmount);
     }
 
     function _fillLimitOrder(
@@ -99,10 +110,8 @@ abstract contract NativeOrdersSettlement is
         FillNativeOrderResults memory results = _fillLimitOrderPrivate(
             FillLimitOrderPrivateParams(order, signature, takerTokenFillAmount, taker, sender)
         );
-        (takerTokenFilledAmount, makerTokenFilledAmount) = (
-            results.takerTokenFilledAmount,
-            results.makerTokenFilledAmount
-        );
+        takerTokenFilledAmount = uint128(results.takerTokenFilledAmount);
+        makerTokenFilledAmount = uint128(results.makerTokenFilledAmount);
     }
 
     function _fillLimitOrderPrivate(
@@ -146,23 +155,24 @@ abstract contract NativeOrdersSettlement is
                 takerAmount: params.order.takerAmount,
                 takerTokenFillAmount: params.takerTokenFillAmount,
                 takerTokenFilledAmount: orderInfo.takerTokenFilledAmount,
-                protocolFeeAmount: results.protocolFeePaid
+                protocolFeeAmount: results.protocolFeePaid,
+                makerIsBuyer: params.order.makerIsBuyer
             })
         );
 
-        if (params.order.takerTokenFeeAmount > 0) {
-            results.takerTokenFeeFilledAmount = uint128(
+        if (params.order.protocolFeeAmount > 0) {
+            results.protocolFeePaid = uint128(
                 LibMathV06.getPartialAmountFloor(
                     results.takerTokenFilledAmount,
                     params.order.takerAmount,
-                    params.order.takerTokenFeeAmount
+                    params.order.protocolFeeAmount
                 )
             );
             _transferERC20TokensFrom(
                 params.order.takerToken,
                 params.taker,
                 params.order.feeRecipient,
-                uint256(results.takerTokenFeeFilledAmount)
+                uint256(results.protocolFeePaid)
             );
         }
 
@@ -173,9 +183,8 @@ abstract contract NativeOrdersSettlement is
             params.order.feeRecipient,
             address(params.order.makerToken),
             address(params.order.takerToken),
-            results.takerTokenFilledAmount,
-            results.makerTokenFilledAmount,
-            results.takerTokenFeeFilledAmount,
+            uint128(results.takerTokenFilledAmount),  // Cast to uint128
+            uint128(results.makerTokenFilledAmount),  // Cast to uint128
             results.protocolFeePaid,
             params.order.pool
         );
@@ -204,15 +213,14 @@ abstract contract NativeOrdersSettlement is
             .takerTokenFilledAmount + takerTokenFilledAmount;
 
         // Collect fee
-        address feePayer = settleInfo.maker;  // Default to maker paying fee
-        if (!LibNativeOrder.isOrderMakerIsBuyer(settleInfo.orderHash)) {
-            feePayer = settleInfo.payer;  // If maker is not buyer, payer (taker) pays fee
-        }
+        address feePayer = settleInfo.makerIsBuyer ? settleInfo.maker : settleInfo.payer;
         require(feeToken.transferFrom(feePayer, address(this), settleInfo.protocolFeeAmount), "Fee transfer failed");
 
         // Transfer tokens
         _transferERC20TokensFrom(settleInfo.takerToken, settleInfo.payer, settleInfo.maker, uint256(takerTokenFilledAmount));
         _transferERC20TokensFrom(settleInfo.makerToken, settleInfo.maker, settleInfo.recipient, uint256(makerTokenFilledAmount));
+
+        return (takerTokenFilledAmount, makerTokenFilledAmount);
     }
 
     function registerAllowedOrderSigner(address signer, bool allowed) external {
@@ -225,7 +233,7 @@ abstract contract NativeOrdersSettlement is
         return a < b ? a : b;
     }
 
-    function collectProtocolFee(address from, uint256 amount) internal {
-        require(feeToken.transferFrom(from, address(this), amount), "Fee transfer failed");
+    function _determineFeePayer(LibNativeOrder.LimitOrder memory order, address taker) internal pure returns (address) {
+        return order.makerIsBuyer ? order.maker : taker;
     }
 }

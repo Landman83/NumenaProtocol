@@ -3,16 +3,16 @@
 pragma solidity ^0.8.26;
 
 import "../tokens/IERC20Token.sol";
-import "../fees/FeeCollector.sol";
-import "../fees/FeeCollectorController.sol";
+import "../fees/CustomFeeCollector.sol";
+import "../fees/CustomFeeCollectorController.sol";
 import "../fees/LibFeeCollector.sol";
 import "../interfaces/IStaking.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-abstract contract FixinProtocolFees {
+abstract contract CustomProtocolFees {
     IERC20 public immutable FEE_TOKEN;
     IStaking private immutable STAKING;
-    FeeCollectorController private immutable FEE_COLLECTOR_CONTROLLER;
+    CustomFeeCollectorController private immutable FEE_COLLECTOR_CONTROLLER;
     bytes32 private immutable FEE_COLLECTOR_INIT_CODE_HASH;
     
     uint256 public makerFeePercentage;
@@ -21,7 +21,7 @@ abstract contract FixinProtocolFees {
     constructor(
         IERC20 feeToken,
         IStaking staking,
-        FeeCollectorController feeCollectorController,
+        CustomFeeCollectorController feeCollectorController,
         uint256 _makerFeePercentage,
         uint256 _takerFeePercentage
     ) {
@@ -42,14 +42,14 @@ abstract contract FixinProtocolFees {
             return 0;
         }
 
-        FeeCollector feeCollector = _getFeeCollector(poolId);
+        CustomFeeCollector feeCollector = _getFeeCollector(poolId);
         require(FEE_TOKEN.transferFrom(payer, address(feeCollector), protocolFeeAmount), "FixinProtocolFees/FEE_TRANSFER_FAILED");
 
         return protocolFeeAmount;
     }
 
     function _transferFeesForPool(bytes32 poolId) internal {
-        FeeCollector feeCollector = FEE_COLLECTOR_CONTROLLER.prepareFeeCollectorToPayFees(poolId);
+        CustomFeeCollector feeCollector = FEE_COLLECTOR_CONTROLLER.prepareFeeCollectorToPayFees(poolId);
         uint256 bal = FEE_TOKEN.balanceOf(address(feeCollector));
         if (bal > 1) {
             FEE_TOKEN.approve(address(STAKING), bal - 1);
@@ -57,9 +57,9 @@ abstract contract FixinProtocolFees {
         }
     }
 
-    function _getFeeCollector(bytes32 poolId) internal view returns (FeeCollector) {
+    function _getFeeCollector(bytes32 poolId) internal view returns (CustomFeeCollector) {
         return
-            FeeCollector(
+            CustomFeeCollector(
                 LibFeeCollector.getFeeCollectorAddress(
                     address(FEE_COLLECTOR_CONTROLLER),
                     FEE_COLLECTOR_INIT_CODE_HASH,
@@ -70,10 +70,8 @@ abstract contract FixinProtocolFees {
 
     function calculateProtocolFee(
         uint256 makerAmount,
-        uint256 takerAmount,
-        uint256 makerFeePercentage,
-        uint256 takerFeePercentage
-    ) internal pure returns (uint256) {
+        uint256 takerAmount
+    ) internal view returns (uint256) {
         uint256 makerFee = (makerAmount * makerFeePercentage) / 10000;
         uint256 takerFee = (takerAmount * takerFeePercentage) / 10000;
         return makerFee + takerFee;
