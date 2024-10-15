@@ -3,17 +3,14 @@
 pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../contracts/utils/OwnableV08.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TestERC20 is ERC20, Ownable {
-    uint8 private _decimals;
-
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint8 decimals_
-    ) ERC20(name, symbol) Ownable(msg.sender) {
-        _decimals = decimals_;
+    constructor(string memory name, string memory symbol, uint256 initialSupply) 
+        ERC20(name, symbol) 
+        Ownable(msg.sender)  // Initialize Ownable with the deployer as the initial owner
+    {
+        _mint(msg.sender, initialSupply);
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
@@ -22,10 +19,6 @@ contract TestERC20 is ERC20, Ownable {
 
     function burn(address from, uint256 amount) public onlyOwner {
         _burn(from, amount);
-    }
-
-    function decimals() public view virtual override returns (uint8) {
-        return _decimals;
     }
 
     // Allow anyone to mint tokens to themselves for testing purposes
