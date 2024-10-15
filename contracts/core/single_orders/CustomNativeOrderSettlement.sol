@@ -13,7 +13,6 @@ import "../../interfaces/INativeOrderEvents.sol";
 import "../../libs/LibSignature.sol";
 import "../../libs/LibNativeOrder.sol";
 import "./NativeOrdersCancellation.sol";
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../fees/CustomProtocolFees.sol";
 
@@ -56,14 +55,14 @@ abstract contract NativeOrdersSettlement is
     IERC20 public immutable feeToken;
 
     constructor(
-        address zeroExAddress,
+        address octagramAddress,
         IERC20 _feeToken,
         IStaking staking,
         FeeCollectorController feeCollectorController,
         uint256 makerFeePercentage,
         uint256 takerFeePercentage
     )
-        NativeOrdersCancellation(zeroExAddress)
+        NativeOrdersCancellation(octagramExAddress)
         FixinProtocolFees(_feeToken, staking, feeCollectorController, makerFeePercentage, takerFeePercentage)
     {
         feeToken = _feeToken;

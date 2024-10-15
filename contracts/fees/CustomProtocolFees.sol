@@ -74,10 +74,9 @@ abstract contract FixinProtocolFees {
         uint256 makerFeePercentage,
         uint256 takerFeePercentage
     ) internal pure returns (uint256) {
-        uint256 totalFeePercentage = makerFeePercentage + takerFeePercentage;
-        uint256 makerFee = (makerAmount * totalFeePercentage) / 10000;
-        uint256 takerFee = (takerAmount * totalFeePercentage) / 10000;
-        return makerFee > takerFee ? makerFee : takerFee;
+        uint256 makerFee = (makerAmount * makerFeePercentage) / 10000;
+        uint256 takerFee = (takerAmount * takerFeePercentage) / 10000;
+        return makerFee + takerFee;
     }
 
     function _updateMakerFeePercentage(uint256 newPercentage) internal {
