@@ -51,6 +51,12 @@ contract TestCustomNativeOrderSettlement is Test {
     uint256 constant makerFeePercentage = 10; // 0.1% in basis points
     uint256 constant takerFeePercentage = 20; // 0.2% in basis points
     
+    address public registeredSigner;
+    uint256 public registeredSignerPrivateKey;
+    
+    address public unregisteredSigner;
+    uint256 public unregisteredSignerPrivateKey;
+    
     function setUp() public {
         // Load environment variables
         maker = vm.addr(vm.envUint("MAKER_PRIVATE_KEY"));
@@ -87,6 +93,12 @@ contract TestCustomNativeOrderSettlement is Test {
         
         vm.prank(taker);
         takerToken.approve(address(settlement), type(uint256).max);
+
+        registeredSigner = vm.envAddress("REGISTERED_SIGNER_ADDRESS");
+        registeredSignerPrivateKey = vm.envUint("REGISTERED_SIGNER_PRIVATE_KEY");
+
+        unregisteredSigner = vm.envAddress("UNREGISTERED_SIGNER_ADDRESS");
+        unregisteredSignerPrivateKey = vm.envUint("UNREGISTERED_SIGNER_PRIVATE_KEY");
     }
     
     function testFillLimitOrder() public {
@@ -170,13 +182,11 @@ contract TestCustomNativeOrderSettlement is Test {
     }
     
     function testRegisterAllowedOrderSigner() public {
-        address signer = address(4);
-        
         vm.prank(maker);
-        settlement.registerAllowedOrderSigner(signer, true);
+        settlement.registerAllowedOrderSigner(registeredSigner, true);
         
         LibNativeOrder.LimitOrder memory order = createTestOrder();
-        LibSignature.Signature memory signature = signOrderWithSigner(order, signer);
+        LibSignature.Signature memory signature = signOrderWithRegisteredSigner(order);
         
         vm.prank(taker);
         (uint128 takerTokenFilledAmount, ) = settlement.fillLimitOrder(order, signature, order.takerAmount);
@@ -185,16 +195,14 @@ contract TestCustomNativeOrderSettlement is Test {
     }
     
     function testCannotFillOrderWithUnregisteredSigner() public {
-        address signer = address(4);
-        
         LibNativeOrder.LimitOrder memory order = createTestOrder();
-        LibSignature.Signature memory signature = signOrderWithSigner(order, signer);
+        LibSignature.Signature memory signature = signOrderWithUnregisteredSigner(order);
         
         bytes32 orderHash = settlement.getLimitOrderHash(order);
         vm.expectRevert(abi.encodeWithSelector(
             LibNativeOrdersRichErrors.OrderNotSignedByMakerError.selector,
             orderHash,
-            signer,
+            unregisteredSigner,
             order.maker
         ));
         vm.prank(taker);
@@ -273,12 +281,36 @@ contract TestCustomNativeOrderSettlement is Test {
         });
     }
     
-    function signOrderWithSigner(LibNativeOrder.LimitOrder memory order, address signer) internal pure returns (LibSignature.Signature memory) {
+    function signOrderWithSigner(LibNativeOrder.LimitOrder memory order, address signer) internal view returns (LibSignature.Signature memory) {
+        bytes32 orderHash = settlement.getLimitOrderHash(order);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(uint256(uint160(signer)), orderHash);
         return LibSignature.Signature({
             signatureType: LibSignature.SignatureType.EIP712,
-            v: 27,
-            r: bytes32(uint256(uint160(signer))),
-            s: bytes32(order.salt)
+            v: v,
+            r: r,
+            s: s
+        });
+    }
+    
+    function signOrderWithRegisteredSigner(LibNativeOrder.LimitOrder memory order) internal view returns (LibSignature.Signature memory) {
+        bytes32 orderHash = settlement.getLimitOrderHash(order);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(registeredSignerPrivateKey, orderHash);
+        return LibSignature.Signature({
+            signatureType: LibSignature.SignatureType.EIP712,
+            v: v,
+            r: r,
+            s: s
+        });
+    }
+    
+    function signOrderWithUnregisteredSigner(LibNativeOrder.LimitOrder memory order) internal view returns (LibSignature.Signature memory) {
+        bytes32 orderHash = settlement.getLimitOrderHash(order);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(unregisteredSignerPrivateKey, orderHash);
+        return LibSignature.Signature({
+            signatureType: LibSignature.SignatureType.EIP712,
+            v: v,
+            r: r,
+            s: s
         });
     }
 }
