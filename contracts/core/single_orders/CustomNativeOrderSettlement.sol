@@ -206,15 +206,15 @@ abstract contract NativeOrdersSettlement is
         );
 
         if (takerTokenFilledAmount == 0 || makerTokenFilledAmount == 0) {
-            return (0, 0);
+            revert LibNativeOrdersRichErrors.InsufficientFillAmount(
+                settleInfo.orderHash, 
+                takerTokenFilledAmount, 
+                makerTokenFilledAmount
+            );
         }
 
         LibNativeOrdersStorage.getStorage().orderHashToTakerTokenFilledAmount[settleInfo.orderHash] = settleInfo
             .takerTokenFilledAmount + takerTokenFilledAmount;
-
-        // Collect fee
-        address feePayer = settleInfo.makerIsBuyer ? settleInfo.maker : settleInfo.payer;
-        require(feeToken.transferFrom(feePayer, address(this), settleInfo.protocolFeeAmount), "Fee transfer failed");
 
         // Transfer tokens
         _transferERC20TokensFrom(settleInfo.takerToken, settleInfo.payer, settleInfo.maker, uint256(takerTokenFilledAmount));

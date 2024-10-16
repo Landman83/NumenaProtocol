@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "../contracts/core/single_orders/CustomNativeOrderSettlement.sol";
 import "../contracts/libs/LibCustomOrder.sol";
 import "../contracts/libs/LibSignature.sol";
@@ -67,7 +68,17 @@ contract TestNativeOrdersSettlement {
         LibSignature.Signature memory signature,
         uint128 takerTokenFillAmount
     ) public payable returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
-        return settlement.fillLimitOrder(order, signature, takerTokenFillAmount);
+        console.log("Contract ETH balance before:", address(this).balance);
+        console.log("Msg value:", msg.value);
+        try settlement.fillLimitOrder(order, signature, takerTokenFillAmount) returns (uint128 filled, uint128 received) {
+            return (filled, received);
+        } catch Error(string memory reason) {
+            console.log("Error:", reason);
+            revert(reason);
+        } catch (bytes memory lowLevelData) {
+            console.logBytes(lowLevelData);
+            revert("Low level error");
+        }
     }
 
     // Add wrapper function for cancelLimitOrder
@@ -91,14 +102,18 @@ contract NativeOrdersSettlementTest is Test {
     TestStaking public staking;
     TestFeeCollectorController public feeCollector;
     
-    address public maker = address(1);
-    address public taker = address(2);
+    address public maker;
+    address public taker;
     address public feeRecipient = address(3);
     
     uint256 constant makerFeePercentage = 10;
     uint256 constant takerFeePercentage = 20;
     
     function setUp() public {
+        // Load addresses from environment variables
+        maker = vm.envAddress("MAKER_ADDRESS");
+        taker = vm.envAddress("TAKER_ADDRESS");
+
         makerToken = new TestERC20("Maker Token", "MTK", 1000000e18);
         takerToken = new TestERC20("Taker Token", "TTK", 1000000e18);
         feeToken = makerToken;
@@ -122,16 +137,42 @@ contract NativeOrdersSettlementTest is Test {
         
         vm.prank(taker);
         takerToken.approve(address(testSettlement.settlement()), type(uint256).max);
+
+        // Fund the contract with ETH
+        vm.deal(address(testSettlement.settlement()), 100 ether);
+        vm.deal(maker, 10 ether);
+        vm.deal(taker, 10 ether);
+        
+        console.log("Maker address:", maker);
+        console.log("Taker address:", taker);
+        console.log("TestSettlement address:", address(testSettlement));
+        console.log("Actual settlement address:", address(testSettlement.settlement()));
+        console.log("Maker token address:", address(makerToken));
+        console.log("Taker token address:", address(takerToken));
+        
+        console.log("Maker token balance:", makerToken.balanceOf(maker));
+        console.log("Taker token balance:", takerToken.balanceOf(taker));
+        console.log("Maker ETH balance:", maker.balance);
+        console.log("Taker ETH balance:", taker.balance);
     }
     
     function testFillLimitOrder() public {
         LibNativeOrder.LimitOrder memory order = createTestOrder();
+        logOrder(order);  // Use the existing logOrder function
         LibSignature.Signature memory signature = signOrder(order);
         
         uint128 fillAmount = order.takerAmount;
         
+        console.log("Taker balance before:", takerToken.balanceOf(taker));
+        console.log("Maker balance before:", makerToken.balanceOf(maker));
+        
         vm.prank(taker);
-        (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) = testSettlement.fillLimitOrder{value: 1337 wei}(order, signature, fillAmount);
+        (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) = testSettlement.fillLimitOrder{value: 2 ether}(order, signature, fillAmount);
+        
+        console.log("Taker token filled amount:", takerTokenFilledAmount);
+        console.log("Maker token filled amount:", makerTokenFilledAmount);
+        console.log("Taker balance after:", takerToken.balanceOf(taker));
+        console.log("Maker balance after:", makerToken.balanceOf(maker));
         
         assertEq(takerTokenFilledAmount, fillAmount, "Incorrect taker token filled amount");
         assertEq(makerTokenFilledAmount, order.makerAmount, "Incorrect maker token filled amount");
@@ -146,7 +187,7 @@ contract NativeOrdersSettlementTest is Test {
         uint128 fillAmount = order.takerAmount / 2;
         
         vm.prank(taker);
-        (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) = testSettlement.fillLimitOrder{value: 1337 wei}(order, signature, fillAmount);
+        (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) = testSettlement.fillLimitOrder{value: 2 ether}(order, signature, fillAmount);
         
         assertEq(takerTokenFilledAmount, fillAmount, "Incorrect taker token filled amount");
         assertEq(makerTokenFilledAmount, order.makerAmount / 2, "Incorrect maker token filled amount");
@@ -159,7 +200,7 @@ contract NativeOrdersSettlementTest is Test {
         
         vm.prank(taker);
         vm.expectRevert(abi.encodeWithSelector(LibNativeOrdersRichErrors.OrderNotFillableError.selector, bytes32(0), uint8(3)));
-        testSettlement.fillLimitOrder{value: 1337 wei}(order, signature, order.takerAmount);
+        testSettlement.fillLimitOrder{value: 2 ether}(order, signature, order.takerAmount);
     }
     
     function testCannotFillCancelledOrder() public {
@@ -171,7 +212,7 @@ contract NativeOrdersSettlementTest is Test {
         
         vm.prank(taker);
         vm.expectRevert(abi.encodeWithSelector(LibNativeOrdersRichErrors.OrderNotFillableError.selector, bytes32(0), uint8(2)));
-        testSettlement.fillLimitOrder{value: 1337 wei}(order, signature, order.takerAmount);
+        testSettlement.fillLimitOrder{value: 2 ether}(order, signature, order.takerAmount);
     }
     
     function testRegisterAllowedOrderSigner() public {
@@ -185,7 +226,7 @@ contract NativeOrdersSettlementTest is Test {
         LibSignature.Signature memory signature = signOrderWithSigner(order, signer);
         
         vm.prank(taker);
-        (uint128 takerTokenFilledAmount, ) = testSettlement.fillLimitOrder{value: 1337 wei}(order, signature, order.takerAmount);
+        (uint128 takerTokenFilledAmount, ) = testSettlement.fillLimitOrder{value: 2 ether}(order, signature, order.takerAmount);
         
         assertEq(takerTokenFilledAmount, order.takerAmount, "Order should be fillable with registered signer");
     }
@@ -224,5 +265,31 @@ contract NativeOrdersSettlementTest is Test {
             r: bytes32(uint256(uint160(signer))),
             s: bytes32(order.salt)
         });
+    }
+
+    function logOrder(LibNativeOrder.LimitOrder memory order) internal view {
+        console.log("makerToken:", address(order.makerToken));
+        console.log("takerToken:", address(order.takerToken));
+        console.log("makerAmount:", order.makerAmount);
+        console.log("takerAmount:", order.takerAmount);
+        console.log("maker:", order.maker);
+        console.log("taker:", order.taker);
+        console.log("sender:", order.sender);
+    }
+    
+    function checkAllowances() internal view {
+        console.log("Maker token allowance:", makerToken.allowance(maker, address(testSettlement.settlement())));
+        console.log("Taker token allowance:", takerToken.allowance(taker, address(testSettlement.settlement())));
+    }
+
+    function testFillOrKillFailed() public {
+        LibNativeOrder.LimitOrder memory order = createTestOrder();
+        LibSignature.Signature memory signature = signOrder(order);
+        
+        uint128 fillAmount = order.takerAmount + 1;  // Try to fill more than available
+        
+        vm.prank(taker);
+        vm.expectRevert(LibNativeOrdersRichErrors.FillOrKillFailedError.selector);
+        testSettlement.fillLimitOrder{value: 2 ether}(order, signature, fillAmount);
     }
 }

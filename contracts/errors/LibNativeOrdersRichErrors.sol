@@ -14,4 +14,6 @@ library LibNativeOrdersRichErrors {
     error FillOrKillFailedError(bytes32 orderHash, uint256 takerTokenFilledAmount, uint256 takerTokenFillAmount);
     error OnlyOrderMakerAllowed(bytes32 orderHash, address sender, address maker);
     error BatchFillIncompleteError(bytes32 orderHash, uint256 takerTokenFilledAmount, uint256 takerTokenFillAmount);
+    error InsufficientFillAmount(bytes32 orderHash, uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount);
+    
 }
