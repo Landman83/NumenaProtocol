@@ -2,8 +2,10 @@
 
 pragma solidity ^0.8.26;
 
-import "../contracts/core/single_orders/CustomOrdersFeature.sol"; // Import the new settlement contract to accomodate changes in fee handling
+import "../contracts/core/single_orders/CustomOrdersFeature.sol";
 import "./TestFeeCollectorController.sol";
+import "../contracts/tokens/IERC20Token.sol";
+import "../contracts/interfaces/IStaking.sol";
 
 abstract contract TestNativeOrdersFeature is NativeOrdersFeature {
     constructor(
@@ -16,9 +18,9 @@ abstract contract TestNativeOrdersFeature is NativeOrdersFeature {
     )
         NativeOrdersFeature(
             octagramAddress,
-            feeToken,
+            _feeToken,
             staking,
-            CustomFeeCollectorController(address(new TestFeeCollectorController())),
+            _feeCollectorController,
             makerFeePercentage,
             takerFeePercentage
         )
