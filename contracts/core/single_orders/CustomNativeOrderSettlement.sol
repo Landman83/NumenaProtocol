@@ -43,7 +43,8 @@ abstract contract NativeOrdersSettlement is
 
     struct FillLimitOrderPrivateParams {
         LibNativeOrder.LimitOrder order;
-        LibSignature.Signature signature;
+        LibSignature.Signature makerSignature;  // Changed to separate maker signature
+        LibSignature.Signature takerSignature;  // Added taker signature
         uint128 takerTokenFillAmount;
         address taker;
         address sender;
@@ -56,6 +57,16 @@ abstract contract NativeOrdersSettlement is
     }
 
     IERC20 public immutable feeToken;
+
+    struct OrderSignature {
+        LibSignature.SignatureType signatureType;
+        uint8 maker_v;
+        bytes32 maker_r;
+        bytes32 maker_s;
+        uint8 taker_v;
+        bytes32 taker_r;
+        bytes32 taker_s;
+    }
 
     constructor(
         address octagramAddress,
@@ -73,27 +84,33 @@ abstract contract NativeOrdersSettlement is
 
     function fillLimitOrder(
         LibNativeOrder.LimitOrder memory order,
-        LibSignature.Signature memory signature,
+        OrderSignature memory signatures,  // Changed from signature to signatures
         uint128 takerTokenFillAmount
-    ) public payable returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
+    ) public payable virtual returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
+        // Convert OrderSignature to LibSignature.Signature
+        LibSignature.Signature memory makerSig = LibSignature.Signature({
+            signatureType: signatures.signatureType,
+            v: signatures.maker_v,
+            r: signatures.maker_r,
+            s: signatures.maker_s
+        });
+
+        LibSignature.Signature memory takerSig = LibSignature.Signature({
+            signatureType: signatures.signatureType,
+            v: signatures.taker_v,
+            r: signatures.taker_r,
+            s: signatures.taker_s
+        });
+
         FillNativeOrderResults memory results = _fillLimitOrderPrivate(
             FillLimitOrderPrivateParams({
                 order: order,
-                signature: signature,
+                makerSignature: makerSig,
+                takerSignature: takerSig,
                 takerTokenFillAmount: takerTokenFillAmount,
                 taker: msg.sender,
                 sender: msg.sender
             })
-        );
-        
-        // Determine the fee payer based on the order type or other logic
-        address feePayer = _determineFeePayer(order, msg.sender);
-        
-        LibNativeOrder.refundExcessProtocolFeeToSender(
-            FEE_TOKEN,
-            feePayer,
-            results.protocolFeePaid,
-            results.protocolFeePaid
         );
         
         takerTokenFilledAmount = uint128(results.takerTokenFilledAmount);
@@ -102,13 +119,21 @@ abstract contract NativeOrdersSettlement is
 
     function _fillLimitOrder(
         LibNativeOrder.LimitOrder memory order,
-        LibSignature.Signature memory signature,
+        LibSignature.Signature memory makerSignature,  // Changed
+        LibSignature.Signature memory takerSignature,  // Added
         uint128 takerTokenFillAmount,
         address taker,
         address sender
     ) public payable virtual onlySelf returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
         FillNativeOrderResults memory results = _fillLimitOrderPrivate(
-            FillLimitOrderPrivateParams(order, signature, takerTokenFillAmount, taker, sender)
+            FillLimitOrderPrivateParams({
+                order: order,
+                makerSignature: makerSignature,
+                takerSignature: takerSignature,
+                takerTokenFillAmount: takerTokenFillAmount,
+                taker: taker,
+                sender: sender
+            })
         );
         takerTokenFilledAmount = uint128(results.takerTokenFilledAmount);
         makerTokenFilledAmount = uint128(results.makerTokenFilledAmount);
@@ -123,6 +148,23 @@ abstract contract NativeOrdersSettlement is
             revert LibNativeOrdersRichErrors.OrderNotFillableError(orderInfo.orderHash, uint8(orderInfo.status));
         }
 
+        // Verify maker signature
+        address makerSigner = LibSignature.getSignerOfHash(orderInfo.orderHash, params.makerSignature);
+        if (makerSigner != params.order.maker && !isValidOrderSigner(params.order.maker, makerSigner)) {
+            revert LibNativeOrdersRichErrors
+                .OrderNotSignedByMakerError(orderInfo.orderHash, makerSigner, params.order.maker);
+        }
+
+        // Verify taker signature
+        address takerSigner = LibSignature.getSignerOfHash(orderInfo.orderHash, params.takerSignature);
+        if (takerSigner != params.taker) {
+            revert LibNativeOrdersRichErrors.OrderNotSignedByTakerError(
+                orderInfo.orderHash,
+                takerSigner,
+                params.taker
+            );
+        }
+
         if (params.order.taker != address(0) && params.order.taker != params.taker) {
             revert LibNativeOrdersRichErrors
                 .OrderNotFillableByTakerError(orderInfo.orderHash, params.taker, params.order.taker);
@@ -131,14 +173,6 @@ abstract contract NativeOrdersSettlement is
         if (params.order.sender != address(0) && params.order.sender != params.sender) {
             revert LibNativeOrdersRichErrors
                 .OrderNotFillableBySenderError(orderInfo.orderHash, params.sender, params.order.sender);
-        }
-
-        {
-            address signer = LibSignature.getSignerOfHash(orderInfo.orderHash, params.signature);
-            if (signer != params.order.maker && !isValidOrderSigner(params.order.maker, signer)) {
-                revert LibNativeOrdersRichErrors
-                    .OrderNotSignedByMakerError(orderInfo.orderHash, signer, params.order.maker);
-            }
         }
 
         results.protocolFeePaid = params.order.protocolFeeAmount;
@@ -236,4 +270,40 @@ abstract contract NativeOrdersSettlement is
     function _determineFeePayer(LibNativeOrder.LimitOrder memory order, address taker) internal pure returns (address) {
         return order.makerIsBuyer ? order.maker : taker;
     }
+
+    function _verifyOrderSignature(
+        bytes32 orderHash,
+        address maker,
+        address taker,
+        OrderSignature memory signature
+    ) internal pure {  // Changed from 'internal' to 'internal pure'
+        // Verify maker signature
+        LibSignature.Signature memory makerSig = LibSignature.Signature({
+            signatureType: signature.signatureType,
+            v: signature.maker_v,
+            r: signature.maker_r,
+            s: signature.maker_s
+        });
+        
+        // Verify taker signature
+        LibSignature.Signature memory takerSig = LibSignature.Signature({
+            signatureType: signature.signatureType,
+            v: signature.taker_v,
+            r: signature.taker_r,
+            s: signature.taker_s
+        });
+
+        // Verify both signatures
+        require(
+            LibSignature.getSignerOfHash(orderHash, makerSig) == maker,
+            "Invalid maker signature"
+        );
+        require(
+            LibSignature.getSignerOfHash(orderHash, takerSig) == taker,
+            "Invalid taker signature"
+        );
+    }
 }
+
+
+

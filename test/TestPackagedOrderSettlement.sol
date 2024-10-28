@@ -169,4 +169,72 @@ contract TestPackagedOrderSettlement is Test {
         console.log("SKYR Token (Security):", address(securityToken));
         console.log("=============================");
     }
+
+    using stdJson for string;
+
+    function testSettlePackagedTrades() public {
+        // Use absolute path
+        string memory path = vm.projectRoot();
+        path = string.concat(path, "/test/fixture_trades.json");
+        string memory json = vm.readFile(path);
+        
+        // Get the number of trades
+        uint256 length = json.readUint(".length");
+        console.log("Number of trades to settle:", length);
+
+        // Process each trade
+        for (uint256 i = 0; i < length; i++) {
+            string memory basePath = string.concat("[", vm.toString(i), "]");
+            
+            // Extract trade data
+            LibNativeOrder.LimitOrder memory order = LibNativeOrder.LimitOrder({
+                makerToken: IERC20Token(json.readAddress(string.concat(basePath, ".makerToken"))),
+                takerToken: IERC20Token(json.readAddress(string.concat(basePath, ".takerToken"))),
+                makerAmount: uint128(json.readUint(string.concat(basePath, ".makerAmount"))),
+                takerAmount: uint128(json.readUint(string.concat(basePath, ".takerAmount"))),
+                protocolFeeAmount: 0,  // Set to 0 for now
+                maker: json.readAddress(string.concat(basePath, ".maker")),
+                taker: json.readAddress(string.concat(basePath, ".taker")),
+                sender: json.readAddress(string.concat(basePath, ".sender")),
+                feeRecipient: json.readAddress(string.concat(basePath, ".feeRecipient")),
+                pool: bytes32(json.readBytes(string.concat(basePath, ".pool"))),
+                expiry: uint64(json.readUint(string.concat(basePath, ".expiration"))),
+                salt: json.readUint(string.concat(basePath, ".salt")),
+                makerIsBuyer: json.readBool(string.concat(basePath, ".makerIsBuyer"))
+            });
+
+            // Extract both maker and taker signatures into combined OrderSignature
+            NativeOrdersSettlement.OrderSignature memory signatures = NativeOrdersSettlement.OrderSignature({
+                signatureType: LibSignature.SignatureType.EIP712,
+                maker_v: uint8(json.readUint(string.concat(basePath, ".maker_v"))),
+                maker_r: json.readBytes32(string.concat(basePath, ".maker_r")),
+                maker_s: json.readBytes32(string.concat(basePath, ".maker_s")),
+                taker_v: uint8(json.readUint(string.concat(basePath, ".taker_v"))),
+                taker_r: json.readBytes32(string.concat(basePath, ".taker_r")),
+                taker_s: json.readBytes32(string.concat(basePath, ".taker_s"))
+            });
+
+            // Record balances before settlement
+            uint256 makerCashBefore = cashToken.balanceOf(order.maker);
+            uint256 makerSecurityBefore = securityToken.balanceOf(order.maker);
+            uint256 takerCashBefore = cashToken.balanceOf(order.taker);
+            uint256 takerSecurityBefore = securityToken.balanceOf(order.taker);
+
+            // Fill the limit order with both signatures
+            uint128 takerTokenFillAmount = order.takerAmount; // Fill the entire order
+            settlement.fillLimitOrder(order, signatures, takerTokenFillAmount);
+
+            // Verify balances after settlement
+            uint256 makerCashAfter = cashToken.balanceOf(order.maker);
+            uint256 makerSecurityAfter = securityToken.balanceOf(order.maker);
+            uint256 takerCashAfter = cashToken.balanceOf(order.taker);
+            uint256 takerSecurityAfter = securityToken.balanceOf(order.taker);
+
+            console.log("Filled trade", i);
+            console.log("Maker:", order.maker);
+            console.log("Taker:", order.taker);
+            console.log("Maker token transfers:", makerSecurityBefore - makerSecurityAfter, makerCashAfter - makerCashBefore);
+            console.log("Taker token transfers:", takerCashBefore - takerCashAfter, takerSecurityAfter - takerSecurityBefore);
+        }
+    }
 }
