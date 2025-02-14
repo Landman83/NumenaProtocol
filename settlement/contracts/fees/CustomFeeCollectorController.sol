@@ -6,16 +6,23 @@ import "../tokens/IERC20Token.sol";
 import "../interfaces/IStaking.sol";
 import "./CustomFeeCollector.sol";
 import "./LibFeeCollector.sol";
+import "./BuybackAndBurn.sol";
 
 contract CustomFeeCollectorController {
     bytes32 public immutable FEE_COLLECTOR_INIT_CODE_HASH;
     IERC20Token public immutable FEE_TOKEN;
     IStaking public immutable STAKING;
+    BuybackAndBurn public immutable BUYBACK;
 
-    constructor(IERC20Token feeToken, IStaking staking) {
+    constructor(
+        IERC20Token feeToken,
+        IStaking staking,
+        BuybackAndBurn buyback
+    ) {
         FEE_COLLECTOR_INIT_CODE_HASH = keccak256(type(CustomFeeCollector).creationCode);
         FEE_TOKEN = feeToken;
         STAKING = staking;
+        BUYBACK = buyback;
     }
 
     function prepareFeeCollectorToPayFees(bytes32 poolId) external returns (CustomFeeCollector feeCollector) {
@@ -25,7 +32,12 @@ contract CustomFeeCollectorController {
             codeSize := extcodesize(feeCollector)
         }
         if (codeSize == 0) {
-            new CustomFeeCollector{salt: bytes32(poolId)}(FEE_TOKEN, STAKING, poolId);
+            new CustomFeeCollector{salt: bytes32(poolId)}(
+                FEE_TOKEN,
+                STAKING,
+                BUYBACK,
+                poolId
+            );
         }
         return feeCollector;
     }

@@ -8,10 +8,12 @@ import "../fees/CustomFeeCollectorController.sol";
 import "../fees/LibFeeCollector.sol";
 import "../interfaces/IStaking.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../fees/BuybackAndBurn.sol";
 
 abstract contract CustomProtocolFees {
     IERC20 public immutable FEE_TOKEN;
     IStaking private immutable STAKING;
+    BuybackAndBurn private immutable BUYBACK;
     CustomFeeCollectorController private immutable FEE_COLLECTOR_CONTROLLER;
     bytes32 private immutable FEE_COLLECTOR_INIT_CODE_HASH;
     
@@ -21,12 +23,14 @@ abstract contract CustomProtocolFees {
     constructor(
         IERC20 feeToken,
         IStaking staking,
+        BuybackAndBurn buyback,
         CustomFeeCollectorController feeCollectorController,
         uint256 _makerFeePercentage,
         uint256 _takerFeePercentage
     ) {
         FEE_TOKEN = feeToken;
         STAKING = staking;
+        BUYBACK = buyback;
         FEE_COLLECTOR_CONTROLLER = feeCollectorController;
         FEE_COLLECTOR_INIT_CODE_HASH = feeCollectorController.FEE_COLLECTOR_INIT_CODE_HASH();
         makerFeePercentage = _makerFeePercentage;
